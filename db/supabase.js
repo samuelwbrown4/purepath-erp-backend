@@ -1,12 +1,13 @@
-const {createClient} = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js');
+const ws = require('ws');
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey, {
   realtime: {
-    enabled: false
+    transport: ws
   }
 });
 
-module.exports = {supabase}
+module.exports = { supabase };
