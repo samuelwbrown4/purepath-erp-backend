@@ -1,25 +1,27 @@
-const pool = require('../db/pool');
+const { supabase } = require('../db/supabase');
 
-async function validateApiKey(req , res , next){
-    try{
+async function validateApiKey(req, res, next) {
+    try {
         const key = req.headers['x-api-key'];
-        if(!key){
-            return res.status(401).json({error: 'No API Key!'})
+        if (!key) {
+            return res.status(401).json({ error: 'No API Key!' });
         }
 
-        let result = await pool.query(`SELECT resource FROM api_keys WHERE api_key = $1` , [key])
+        const { data, error } = await supabase
+            .from('api_keys')
+            .select('resource')
+            .eq('api_key', key)
+            .single();
 
-        if(result.rows.length === 0){
-            return res.status(401).json({error: 'Invalid API Key!'})
+        if (!data || error) {
+            return res.status(401).json({ error: 'Invalid API Key!' });
         }
 
-        let resource = result.rows[0].resource
-
-        req.resource = resource
-        next()
-    }catch(error){
-
+        req.resource = data.resource;
+        next();
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
     }
 }
 
-module.exports = {validateApiKey}
+module.exports = { validateApiKey };
