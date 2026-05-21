@@ -7,7 +7,10 @@ const orderRoutes = require('./routes/orders')
 const PORT = 3000 || process.env.PORT
 
 app.use(express.json())
-app.use(cors())
+app.use(cors({
+    origin: ['http://localhost:5174', 'https://purepath-erp.com', 'https://www.purepath-erp.com'],
+    credentials: true
+}))
 
 app.use('/api/orders' , orderRoutes)
 
