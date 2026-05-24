@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const { supabase } = require('../db/supabase');
-const {validateApiKey} = require('../middleware/api');
+const { validateApiKey } = require('../middleware/api');
 
 const TMS_API_KEY = process.env.TMS_API_KEY;
 const TMS_API_URL = process.env.TMS_API_URL;
@@ -9,9 +9,9 @@ const TMS_API_URL = process.env.TMS_API_URL;
 router.post('/new', async (req, res) => {
     try {
 
-        const {payload} = req.body
+        const { payload } = req.body
 
-        const { data , error: erpOrderError} = await supabase
+        const { data, error: erpOrderError } = await supabase
             .from('erp_orders')
             .insert({
                 customer_id: payload.customerId,
@@ -24,7 +24,7 @@ router.post('/new', async (req, res) => {
             })
             .select();
 
-        if(erpOrderError) throw erpOrderError;
+        if (erpOrderError) throw erpOrderError;
 
         const { error } = await supabase
             .from('order_line_items')
@@ -35,77 +35,98 @@ router.post('/new', async (req, res) => {
                 total_weight_lbs: li.weight
             })));
 
-            if(error) throw error;
+        if (error) throw error;
 
-            let response = await fetch(`${TMS_API_URL}/api/integration/orders` , {
-                method: 'POST',
-                headers: {
-                    'Content-Type' : 'application/json' , 
-                    'x-api-key' : `${TMS_API_KEY}`
-                },
-                body: JSON.stringify({payload})
-            });
+        let response = await fetch(`${TMS_API_URL}/api/integration/orders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': `${TMS_API_KEY}`
+            },
+            body: JSON.stringify({ payload })
+        });
 
-            let result = await response.json();
+        let result = await response.json();
 
-            if(response.status === 201){
-                res.status(201).json({message: 'success'})
-            };
+        if (response.status === 201) {
+            res.status(201).json({ message: 'success' })
+        };
     } catch (err) {
         res.status(500).json({ error: err.message })
     }
 });
 
-router.patch('/sync' , validateApiKey , async (req , res) => {
-    try{
-        const {unsyncedOrders} = req.body;
+router.patch('/sync', validateApiKey, async (req, res) => {
+    try {
+        const { unsyncedOrders } = req.body;
 
         for (const order of unsyncedOrders) {
-            const {error} = await supabase
-            .from('erp_orders')
-            .update({order_status: order.order_status})
-            .eq('order_number' , order.order_number)
+            const { error } = await supabase
+                .from('erp_orders')
+                .update({ order_status: order.order_status })
+                .eq('order_number', order.order_number)
 
             if (error) throw error
         }
 
-        
 
-        res.status(200).json({message: 'success'})
-    }catch(err){
-        res.status(500).json({error: err.message})
+
+        res.status(200).json({ message: 'success' })
+    } catch (err) {
+        res.status(500).json({ error: err.message })
     }
 });
 
-router.get('/order-form' , async (req , res) => {
-    try{
-        const {data: shipperLocations , error: shipperLocationError} = await supabase
+router.get('/order-form', async (req, res) => {
+    try {
+        const { data: shipperLocations, error: shipperLocationError } = await supabase
             .from('shipper_locations')
             .select('*')
 
-        if(shipperLocationError) throw shipperLocationError
+        if (shipperLocationError) throw shipperLocationError
 
-        const {data: products , error: productError} = await supabase
+        const { data: products, error: productError } = await supabase
             .from('products')
             .select('*')
 
-        if(productError) throw productError
+        if (productError) throw productError
 
-        const {count: orderCount , error: orderCountError} = await supabase
+        const { count: orderCount, error: orderCountError } = await supabase
             .from('erp_orders')
-            .select('*' , {count: 'exact' , head: true})
+            .select('*', { count: 'exact', head: true })
 
-        if(orderCountError) throw orderCountError
+        if (orderCountError) throw orderCountError
 
-        const { data: customerLocations, error: customerLocationsError} = await supabase
-                    .from('customer_locations')
-                    .select('*');
-        
-                if (customerLocationsError) console.log(customerLocationsError);
+        const { data: customerLocations, error: customerLocationsError } = await supabase
+            .from('customer_locations')
+            .select('*');
 
-        res.status(200).json({shipperLocations , products , orderCount , customerLocations})
-    }catch(err){
-        res.status(500).json({error: err.message})
+        if (customerLocationsError) console.log(customerLocationsError);
+
+        res.status(200).json({ shipperLocations, products, orderCount, customerLocations })
+    } catch (err) {
+        res.status(500).json({ error: err.message })
+    }
+});
+
+router.get('/all', async (req, res) => {
+    try {
+        const { data: orders, error } = await supabase
+            .from('erp_orders')
+            .select(`
+                *,
+                customer_locations (name, city , address , state),
+                shipper_locations (name, erp_id , city , address , state),
+                order_line_items (
+                    quantity,
+                    total_weight_lbs,
+                    products (description, material_number)
+                )
+            `)
+
+        res.status(200).json({ orders })
+    } catch (err) {
+        res.status(500).json({ error: err.message })
     }
 })
 
