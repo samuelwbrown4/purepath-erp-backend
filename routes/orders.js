@@ -9,18 +9,24 @@ const TMS_API_URL = process.env.TMS_API_URL;
 router.post('/new', async (req, res) => {
     try {
 
+
         const { payload } = req.body
+        console.log('payload.companyId:', payload.companyId)
 
         const { data, error: erpOrderError } = await supabase
             .from('erp_orders')
             .insert({
-                customer_id: payload.customerId,
+                
                 origin_id: payload.orderOriginId,
                 destination_id: payload.orderDestId,
                 order_number: payload.orderNumber,
-                customer_po_number: payload.custPoNumber,
+                customer_po_number: payload.custPoNumber ? payload.custPoNumber : null,
                 requested_ship_date: payload.shipDate,
-                order_status: payload.orderStatus
+                order_status: payload.orderStatus,
+                direction_category: payload.directionCategory,
+                company_id: payload.companyId,
+                customer_id: payload.customerId,
+                supplier_id: payload.supplierId
             })
             .select();
 
@@ -101,9 +107,21 @@ router.get('/order-form', async (req, res) => {
             .from('customer_locations')
             .select('*');
 
-        if (customerLocationsError) console.log(customerLocationsError);
+        if (customerLocationsError) throw customerLocationsError;
 
-        res.status(200).json({ shipperLocations, products, orderCount, customerLocations })
+        const {data: company , error: companyError} = await supabase
+            .from('companies')
+            .select('*');
+
+        if(companyError) throw companyError;
+
+        const {data: supplierLocations , error: supplierLocationsError} = await supabase
+            .from('suppliers')
+            .select('*');
+
+        if(supplierLocationsError) throw supplierLocationsError;
+
+        res.status(200).json({ shipperLocations, products, orderCount, customerLocations , company , supplierLocations })
     } catch (err) {
         res.status(500).json({ error: err.message })
     }
@@ -117,6 +135,7 @@ router.get('/all', async (req, res) => {
                 *,
                 customer_locations (name, city , address , state),
                 shipper_locations (name, erp_id , city , address , state),
+                supplier_locations (name , city , address , state),
                 order_line_items (
                     quantity,
                     total_weight_lbs,
@@ -126,6 +145,33 @@ router.get('/all', async (req, res) => {
 
         res.status(200).json({ orders })
     } catch (err) {
+        res.status(500).json({ error: err.message })
+    }
+})
+
+router.get('/supplier-products/:orderOriginId' , async (req , res) => {
+    try{
+        const {orderOriginId} = req.params;
+
+        let {data: supplierProducts , error: supplierProductsError} = await supabase
+            .from('supplier_products')
+            .select(`
+                products (
+                    id,
+                    material_number,
+                    description,
+                    weight,
+                    freight_class,
+                    unit_of_measure,
+                    product_type
+                )
+            `)
+            .eq('supplier_id', orderOriginId)
+
+            supplierProducts = supplierProducts.map(row => row.products)
+
+            res.status(200).json({supplierProducts})
+    }catch{
         res.status(500).json({ error: err.message })
     }
 })
