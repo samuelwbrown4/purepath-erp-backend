@@ -132,13 +132,13 @@ router.get('/order-form', async (req, res) => {
 router.get('/all', async (req, res) => {
     try {
         const { data: orders, error } = await supabase
-            .from('erp_orders')
-            .select(`
+    .from('erp_orders')
+    .select(`
         *,
         order_line_items (quantity, total_weight_lbs),
-        shipper_locations (name, erp_id, city, address, state),
-        suppliers (name, city, address, state),
-        customer_locations (name, city, address, state)
+        shipper_locations!fk_shipper_id (name, erp_id, city, address, state),
+        suppliers!fk_supplier_id (name, city, address, state),
+        customer_locations!fk_customer_location_id (name, city, address, state)
     `)
 
         console.log('with customer_locations:', orders, error)
