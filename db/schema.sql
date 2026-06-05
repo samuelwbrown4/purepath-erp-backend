@@ -102,7 +102,9 @@ CREATE TABLE erp_orders (
     direction_category direction NOT NULL,
     company_id UUID NOT NULL,
     customer_id UUID,
+    customer_location_id UUID,
     supplier_id UUID,
+    shipper_id UUID,
     origin_id UUID NOT NULL,
     destination_id UUID NOT NULL,
     order_number VARCHAR(255) NOT NULL UNIQUE,
@@ -116,7 +118,9 @@ CREATE TABLE erp_orders (
     CONSTRAINT fk_customer_id FOREIGN KEY (customer_id) REFERENCES customers(id),
     CONSTRAINT fk_supplier_id FOREIGN KEY (supplier_id) REFERENCES suppliers(id),
     CONSTRAINT fk_shipment_id FOREIGN KEY (shipment_id) REFERENCES erp_shipments(id),
-    CONSTRAINT fk_company_id FOREIGN KEY (company_id) REFERENCES companies(id)
+    CONSTRAINT fk_company_id FOREIGN KEY (company_id) REFERENCES companies(id),
+    CONSTRAINT fk_shipper_id FOREIGN KEY (shipper_id) REFERENCES shipper_locations(id),
+    CONSTRAINT fk_customer_location_id FOREIGN KEY (customer_location_id) REFERENCES customer_locations(id)
 );
 
 CREATE TABLE products (
