@@ -3,6 +3,9 @@ require('dotenv').config()
 const cors = require('cors')
 const app = express();
 const orderRoutes = require('./routes/orders')
+const productRoutes = require('./routes/products')
+const companiesRoutes = require('./routes/companies')
+const customersRoutes = require('./routes/customers')
 
 const PORT = 3000 || process.env.PORT
 
@@ -13,6 +16,9 @@ app.use(cors({
 }))
 
 app.use('/api/orders' , orderRoutes)
+app.use('/api/products' , productRoutes)
+app.use('/api/companies' , companiesRoutes)
+app.use('/api/customers' , customersRoutes)
 
 app.get('/' , (req , res)=>{
     res.send('ERP app up and running!')

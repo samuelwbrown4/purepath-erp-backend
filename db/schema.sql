@@ -15,6 +15,7 @@ CREATE TABLE companies (
 
 CREATE TABLE customers (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    tms_customer_id UUID NOT NULL,
     company_id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
     address VARCHAR(255) NOT NULL,
@@ -27,6 +28,7 @@ CREATE TABLE customers (
 
 CREATE TABLE customer_locations (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    tms_customer_location_id UUID NOT NULL,
     customer_id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
     address VARCHAR(255) NOT NULL,
@@ -34,8 +36,8 @@ CREATE TABLE customer_locations (
     state VARCHAR(255) NOT NULL,
     zip_code VARCHAR(10) NOT NULL,
     country VARCHAR(255) NOT NULL,
-    latitude DECIMAL(10, 6) NOT NULL,
-    longitude DECIMAL(10, 6) NOT NULL,
+    latitude DECIMAL(10, 6),
+    longitude DECIMAL(10, 6),
     CONSTRAINT fk_customer_id FOREIGN KEY (customer_id) REFERENCES customers(id)
 );
 

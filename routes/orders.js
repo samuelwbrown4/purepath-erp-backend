@@ -13,6 +13,29 @@ router.post('/new', async (req, res) => {
         const { payload } = req.body
         console.log('payload.companyId:', payload.companyId)
 
+        if (payload.customerId) {
+            const { data: customerData, error: custDataError } = await supabase
+                .from('customers')
+                .select('tms_customer_id')
+                .eq('id', payload.customerId)
+                .single()
+
+            const tmsCustomerId = customerData.tms_customer_id
+            payload.tmsCustomerId = tmsCustomerId
+        }
+
+        let tmsOrderDestId = payload.orderDestId
+
+        if (payload.directionCategory === 'outbound') {
+            const { data: custLocData, error: custLocDataError } = await supabase
+                .from('customer_locations')
+                .select('tms_customer_location_id')
+                .eq('id', payload.orderDestId)
+                .single()
+
+            payload.tmsOrderDestId = custLocData.tms_customer_location_id
+        }
+
         const { data, error: erpOrderError } = await supabase
             .from('erp_orders')
             .insert({
@@ -132,8 +155,8 @@ router.get('/order-form', async (req, res) => {
 router.get('/all', async (req, res) => {
     try {
         const { data: orders, error } = await supabase
-    .from('erp_orders')
-    .select(`
+            .from('erp_orders')
+            .select(`
         *,
         order_line_items (quantity, total_weight_lbs),
         shipper_locations!fk_shipper_id (name, erp_id, city, address, state),
