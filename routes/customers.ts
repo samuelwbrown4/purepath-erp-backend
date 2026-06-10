@@ -1,4 +1,5 @@
 const express = require('express')
+import { Request , Response } from "express";
 const router = express.Router()
 const { supabase } = require('../db/supabase');
 const { validateApiKey } = require('../middleware/api');
@@ -6,7 +7,7 @@ const { validateApiKey } = require('../middleware/api');
 const TMS_API_KEY = process.env.TMS_API_KEY;
 const TMS_API_URL = process.env.TMS_API_URL;
 
-router.get('/locations/all', async (req, res) => {
+router.get('/locations/all', async (_req: Request, res: Response) => {
     try {
         const { data: customerLocations, error } = await supabase
             .from('customer_locations')
@@ -14,22 +15,30 @@ router.get('/locations/all', async (req, res) => {
 
         res.status(200).json({ customerLocations })
     } catch (err) {
-        res.status(500).json({ error: err.message })
+        if(err instanceof Error){
+            res.status(500).json({ error: err.message })
+        }else{
+            res.status(500).json({error: 'An unknown error ocured'})
+        }
     }
 })
 
-router.get('/all', async (req, res) => {
+router.get('/all', async (req: Request, res: Response) => {
     try {
         const { data: customers, error } = await supabase
             .from('customers')
             .select('*')
         res.status(200).json({ customers })
     } catch (err) {
-        res.status(500).json({ error: err.message })
+        if(err instanceof Error){
+            res.status(500).json({ error: err.message })
+        }else{
+            res.status(500).json({error: 'An unknown error occured'})
+        }
     }
 })
 
-router.post('/new', async (req, res) => {
+router.post('/new', async (req: Request, res: Response) => {
     try {
         const { payload } = req.body;
 
@@ -71,11 +80,15 @@ router.post('/new', async (req, res) => {
 
         res.status(201).json({ customer })
     } catch (err) {
-        res.status(500).json({ error: err.message })
+        if(err instanceof Error){
+            res.status(500).json({error: err.message})
+        }else{
+            res.status(500).json({error: 'An unknown error occured'})
+        }
     }
 });
 
-router.post('/locations/new', async (req, res) => {
+router.post('/locations/new', async (req: Request, res: Response) => {
     try {
         const { payload } = req.body
         payload.country = 'US'
@@ -101,7 +114,7 @@ router.post('/locations/new', async (req, res) => {
 
         let result = await response.json()
 
-        if (!result.newCustomerLocation) return res.status(500).json({ error: err.message })
+        if (!result.newCustomerLocation) return res.status(500).json({ error: 'Failed to create location in TMS' })
 
         payload.tmsCustLocId = result.newCustomerLocation
 
@@ -125,7 +138,11 @@ router.post('/locations/new', async (req, res) => {
 
 
     } catch (err) {
-        res.status(500).json({ error: err.message })
+        if(err instanceof Error){
+            res.status(500).json({error: err.message})
+        }else{
+            res.status(500).json({error: 'An unknown error occured'})
+        }
     }
 })
 

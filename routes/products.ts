@@ -1,4 +1,5 @@
 const express = require('express')
+import {Request , Response} from 'express'
 const router = express.Router()
 const { supabase } = require('../db/supabase');
 const { validateApiKey } = require('../middleware/api');
@@ -6,7 +7,7 @@ const { validateApiKey } = require('../middleware/api');
 const TMS_API_KEY = process.env.TMS_API_KEY;
 const TMS_API_URL = process.env.TMS_API_URL;
 
-router.post('/new' , async (req , res) => {
+router.post('/new' , async (req: Request , res: Response) => {
     try{
         const {payload} = req.body
 
@@ -25,11 +26,15 @@ router.post('/new' , async (req , res) => {
 
         res.status(201).json({product})
     }catch(err){
-        res.status(500).json({error: err.message})
+        if(err instanceof Error){
+            res.status(500).json({error: err.message})
+        }else{
+            res.status(500).json({ error: 'An unknown error occurred' })
+        } 
     }
 })
 
-router.get('/finished-goods' , async (req , res) => {
+router.get('/finished-goods' , async (req: Request , res: Response) => {
     try{
         const {data: products , error} = await supabase 
             .from('products')
@@ -39,7 +44,11 @@ router.get('/finished-goods' , async (req , res) => {
             console.log(products)
         res.status(200).json({products})
     }catch(err){
-        res.status(500).json({error: err.message})
+        if(err instanceof Error){
+            res.status(500).json({error: err.message})
+        }else{
+            res.status(500).json({error: 'An unknkown error occured'})
+        }
     }
 })
 

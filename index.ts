@@ -1,4 +1,5 @@
 const express = require('express');
+import { Request , Response } from "express";
 require('dotenv').config()
 const cors = require('cors')
 const app = express();
@@ -7,7 +8,7 @@ const productRoutes = require('./routes/products')
 const companiesRoutes = require('./routes/companies')
 const customersRoutes = require('./routes/customers')
 
-const PORT = 3000 || process.env.PORT
+const PORT = process.env.PORT || 3000 
 
 app.use(express.json())
 app.use(cors({
@@ -20,7 +21,7 @@ app.use('/api/products' , productRoutes)
 app.use('/api/companies' , companiesRoutes)
 app.use('/api/customers' , customersRoutes)
 
-app.get('/' , (req , res)=>{
+app.get('/' , (_req: Request , res: Response)=>{
     res.send('ERP app up and running!')
 });
 
