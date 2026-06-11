@@ -43,7 +43,7 @@ router.post('/new', async (req: Request, res: Response) => {
             payload.tmsCustomerId = tmsCustomerId
         }
 
-        let tmsOrderDestId = payload.orderDestId
+        payload.tmsOrderDestId = payload.orderDestId
 
         if (payload.directionCategory === 'outbound') {
             const { data: custLocData, error: custLocDataError } = await supabase
