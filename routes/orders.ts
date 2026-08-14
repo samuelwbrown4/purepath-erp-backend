@@ -111,6 +111,7 @@ router.post('/new', async (req: Request, res: Response) => {
 });
 
 router.patch('/sync', validateApiKey, async (req: Request, res: Response) => {
+    console.log('>>> SYNC ROUTE HIT', req.body)
     try {
         const { unsyncedOrders } = req.body;
 
