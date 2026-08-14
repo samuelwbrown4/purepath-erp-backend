@@ -76,6 +76,7 @@ router.post('/new', async (req, res) => {
     }
 });
 router.patch('/sync', validateApiKey, async (req, res) => {
+    console.log('>>> SYNC ROUTE HIT', req.body)
     try {
         const { unsyncedOrders } = req.body;
         for (const order of unsyncedOrders) {
