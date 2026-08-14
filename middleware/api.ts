@@ -29,6 +29,7 @@ async function validateApiKey(req: Request, res: Response, next: NextFunction) {
         req.resource = data.resource;
         next();
     } catch (error) {
+        console.log('>>> validateApiKey error:', error)
         res.status(500).json({ error: 'Internal server error' });
     }
 }
