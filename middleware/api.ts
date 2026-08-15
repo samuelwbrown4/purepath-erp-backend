@@ -1,4 +1,4 @@
-const supabase = require('../db/supabase');
+const {supabase} = require('../db/supabase');
 import { Request, Response , NextFunction } from "express";
 
 declare global {
