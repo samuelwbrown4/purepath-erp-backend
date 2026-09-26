@@ -1,5 +1,5 @@
 const express = require('express')
-import { Request , Response } from "express";
+import { Request, Response } from "express";
 const router = express.Router()
 const { supabase } = require('../db/supabase');
 const { validateApiKey } = require('../middleware/api');
@@ -23,6 +23,13 @@ interface SupplierProductRow {
         unit_of_measure: string
         product_type: string
     }
+}
+
+interface syncResponse {
+
+    success: string[],
+    failure: string[]
+
 }
 
 router.post('/new', async (req: Request, res: Response) => {
@@ -101,13 +108,13 @@ router.post('/new', async (req: Request, res: Response) => {
         if (response.status === 201) {
             res.status(201).json({ message: 'success' })
         };
-    } catch (err){
-    if (err instanceof Error) {
-        res.status(500).json({ error: err.message })
-    } else {
-        res.status(500).json({ error: 'An unknown error occurred' })
+    } catch (err) {
+        if (err instanceof Error) {
+            res.status(500).json({ error: err.message })
+        } else {
+            res.status(500).json({ error: 'An unknown error occurred' })
+        }
     }
-}
 });
 
 router.patch('/sync', validateApiKey, async (req: Request, res: Response) => {
@@ -115,25 +122,33 @@ router.patch('/sync', validateApiKey, async (req: Request, res: Response) => {
     try {
         const { unsyncedOrders } = req.body;
 
+        let syncResponse: syncResponse = { success: [], failure: [] }
+
         for (const order of unsyncedOrders) {
+
             const { error } = await supabase
                 .from('erp_orders')
                 .update({ order_status: order.order_status })
                 .eq('order_number', order.order_number)
 
-            if (error) throw error
+            if (error) {
+                syncResponse.failure.push(order.order_number)
+            } else {
+                syncResponse.success.push(order.order_number)
+            }
+
         }
 
 
 
-        res.status(200).json({ message: 'success' })
-    } catch (err){
-    if (err instanceof Error) {
-        res.status(500).json({ error: err.message })
-    } else {
-        res.status(500).json({ error: 'An unknown error occurred' })
+        res.status(200).json(syncResponse)
+    } catch (err) {
+        if (err instanceof Error) {
+            res.status(500).json({ error: err.message })
+        } else {
+            res.status(500).json({ error: 'An unknown error occurred' })
+        }
     }
-}
 });
 
 router.get('/order-form', async (_req: Response, res: Response) => {
@@ -175,13 +190,13 @@ router.get('/order-form', async (_req: Response, res: Response) => {
         if (supplierLocationsError) throw supplierLocationsError;
 
         res.status(200).json({ shipperLocations, products, orderCount, customerLocations, company, supplierLocations })
-    } catch (err){
-    if (err instanceof Error) {
-        res.status(500).json({ error: err.message })
-    } else {
-        res.status(500).json({ error: 'An unknown error occurred' })
+    } catch (err) {
+        if (err instanceof Error) {
+            res.status(500).json({ error: err.message })
+        } else {
+            res.status(500).json({ error: 'An unknown error occurred' })
+        }
     }
-}
 });
 
 router.get('/all', async (_req: Request, res: Response) => {
@@ -199,13 +214,13 @@ router.get('/all', async (_req: Request, res: Response) => {
         console.log('with customer_locations:', orders, error)
 
         res.status(200).json({ orders })
-    } catch (err){
-    if (err instanceof Error) {
-        res.status(500).json({ error: err.message })
-    } else {
-        res.status(500).json({ error: 'An unknown error occurred' })
+    } catch (err) {
+        if (err instanceof Error) {
+            res.status(500).json({ error: err.message })
+        } else {
+            res.status(500).json({ error: 'An unknown error occurred' })
+        }
     }
-}
 })
 
 router.get('/supplier-products/:orderOriginId', async (req: Request, res: Response) => {
@@ -230,13 +245,13 @@ router.get('/supplier-products/:orderOriginId', async (req: Request, res: Respon
         supplierProducts = supplierProducts.map((row: SupplierProductRow) => row.products)
 
         res.status(200).json({ supplierProducts })
-    } catch (err){
-    if (err instanceof Error) {
-        res.status(500).json({ error: err.message })
-    } else {
-        res.status(500).json({ error: 'An unknown error occurred' })
+    } catch (err) {
+        if (err instanceof Error) {
+            res.status(500).json({ error: err.message })
+        } else {
+            res.status(500).json({ error: 'An unknown error occurred' })
+        }
     }
-}
 })
 
 module.exports = router
